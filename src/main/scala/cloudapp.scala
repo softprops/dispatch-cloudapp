@@ -1,5 +1,6 @@
 package dispatch.cloudapp
 
+import scala.util.parsing.json.JSON
 
 object CloudApp {
   import DispatchContrib.ContribVerbs
@@ -13,7 +14,10 @@ trait Client {
 }
 
 case class CloudApp(email: String, password: String)
-  extends Client with Items with Account {
+  extends Client
+  with Account
+  with Items
+  with Uploads {
   import dispatch._
 
   def api = new DispatchContrib.ContribVerbs(
@@ -46,3 +50,31 @@ trait Items { self: Client =>
         source.map("source" -> _)
 }
 
+trait Uploads { self: Client =>
+  import java.io.File
+  import com.ning.http.multipart.{
+    StringPart, FilePart
+  }
+  import dispatch._
+  
+  private val asJsonMap = As.string andThen {
+    JSON.parseFull(_).map {
+      _.asInstanceOf[Map[String, Any]]
+    }
+  }
+
+  def up(file: File) =
+    for {
+      nup <- Http(api / "items" / "new" > asJsonMap)()
+    } yield {
+      val remaining = nup("uploads_remaining").toString.toDouble.toInt // cheap/dirty
+      if(remaining > 0)
+        Right((url(nup("url").toString) /: nup("params").asInstanceOf[Map[String, String]]) {
+          case (b, (k, v)) =>
+            b.addBodyPart(new StringPart(k, v))
+        }.addBodyPart(
+          new FilePart("file", file)
+        ))
+      else Left("over limit")
+    }
+}

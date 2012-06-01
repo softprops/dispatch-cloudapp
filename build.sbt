@@ -4,7 +4,11 @@ name := "dispatch-cloudapp"
 
 version := "0.1.0-SNAPSHOT"
 
-libraryDependencies += "net.databinder.dispatch" %% "core" % "0.9.0-alpha2"
+libraryDependencies ++= Seq(
+  "net.databinder.dispatch" %% "core" % "0.9.0-beta1"
+)
+
+resolvers += "sona snaps" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 crossScalaVersions :=
   Seq("2.8.0", "2.8.1", "2.8.2", "2.9.0", "2.9.0-1", "2.9.1")
@@ -22,7 +26,7 @@ publishTo <<= version { v =>
 publishArtifact in Test := false
 
 licenses <<= (version)(v => Seq(
-  ("MIT" -> url("https://github.com/softprops/dispatch-cloudapp/tree/%s/LICENSE".format(v)))))
+  ("MIT" -> url("https://github.com/softprops/dispatch-cloudapp/blob/%s/LICENSE".format(v)))))
 
 pomExtra := (
   <scm>
@@ -36,3 +40,6 @@ pomExtra := (
       <url>https://github.com/softprops</url>
     </developer>
   </developers>)
+
+
+seq(lsSettings :_*)
